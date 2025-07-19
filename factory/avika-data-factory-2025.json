@@ -1,0 +1,9 @@
+{
+	"name": "avika-data-factory-2025",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "bda95738-5894-4209-b4a5-d981323d288a",
+		"tenantId": "6dbd461d-161f-448e-ab01-61a6cbf78126"
+	}
+}

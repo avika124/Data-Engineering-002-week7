@@ -1,0 +1,251 @@
+{
+	"name": "Daily_Data_Processing_Pipeline",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get_CSV_Files",
+				"type": "GetMetadata",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "CSV_Files_Dataset",
+						"type": "DatasetReference"
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Filter_CUST_MSTR_Files",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get_CSV_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get_CSV_Files').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@startswith(item().name, 'CUST_MSTR')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Process_CUST_MSTR_Files",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter_CUST_MSTR_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter_CUST_MSTR_Files').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_CUST_MSTR_Data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"preCopyScript": "TRUNCATE TABLE CUST_MSTR",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false,
+									"disableMetricsCollection": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "customer_id",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "customer_id",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "customer_name",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "customer_name",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "email",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "email",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "phone",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "phone",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "city",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "city",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "state",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "state",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "zipcode",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "zipcode",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "CUST_MSTR_Source_Dataset",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "CUST_MSTR_Table_Dataset",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "UpdateCUSTMSTRDates",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Process_CUST_MSTR_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[dbo].[UpdateCUSTMSTRDates]"
+				},
+				"linkedServiceName": {
+					"referenceName": "SQLDatabaseConnection",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-07-19T11:55:12Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
