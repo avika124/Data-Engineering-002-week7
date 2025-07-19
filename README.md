@@ -1,4 +1,8 @@
 DATA LAKE FILE PROCESSING PIPELINE
+
+
+
+
 Azure Data Factory pipeline to process CSV files from Data Lake Storage and load into SQL Database with date extraction from filenames.
 Architecture
 Data Lake Storage Gen2 → Azure Data Factory → SQL Database
