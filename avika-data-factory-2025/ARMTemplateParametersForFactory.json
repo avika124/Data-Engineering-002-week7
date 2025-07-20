@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "avika-data-factory-2025"
+		},
+		"DataLakeConnection_accountKey": {
+			"value": ""
+		},
+		"SQLDatabaseConnection_password": {
+			"value": ""
+		},
+		"DataLakeConnection_properties_typeProperties_url": {
+			"value": "https://avikadatalake2024.dfs.core.windows.net/"
+		},
+		"SQLDatabaseConnection_properties_typeProperties_server": {
+			"value": "avika-sql-server-2025.database.windows.net"
+		},
+		"SQLDatabaseConnection_properties_typeProperties_database": {
+			"value": "DataWarehouse"
+		},
+		"SQLDatabaseConnection_properties_typeProperties_userName": {
+			"value": "sqladmin"
+		}
+	}
+}
