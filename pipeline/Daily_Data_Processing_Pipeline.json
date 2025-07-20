@@ -5,7 +5,14 @@
 			{
 				"name": "Get_CSV_Files",
 				"type": "GetMetadata",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "TRUNCATE TABLE CUST_MSTR",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -88,6 +95,15 @@
 							"typeProperties": {
 								"source": {
 									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "file_date",
+											"value": {
+												"value": "@formatDateTime(concat(substring(item().name, 10, 4), '-', substring(item().name, 14, 2), '-', substring(item().name, 16, 2)), 'yyyy-MM-dd')",
+												"type": "Expression"
+											}
+										}
+									],
 									"storeSettings": {
 										"type": "AzureBlobFSReadSettings",
 										"recursive": true,
@@ -99,7 +115,6 @@
 								},
 								"sink": {
 									"type": "AzureSqlSink",
-									"preCopyScript": "TRUNCATE TABLE CUST_MSTR",
 									"writeBehavior": "insert",
 									"sqlWriterUseTableLock": false,
 									"disableMetricsCollection": false
@@ -191,6 +206,17 @@
 												"type": "String",
 												"physicalType": "nvarchar"
 											}
+										},
+										{
+											"source": {
+												"name": "file_date",
+												"type": "String"
+											},
+											"sink": {
+												"name": "date",
+												"type": "DateTime",
+												"physicalType": "date"
+											}
 										}
 									],
 									"typeConversion": true,
@@ -241,6 +267,32 @@
 				"linkedServiceName": {
 					"referenceName": "SQLDatabaseConnection",
 					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "TRUNCATE TABLE CUST_MSTR",
+				"type": "Script",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SQLDatabaseConnection",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "TRUNCATE TABLE CUST_MSTR"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
 				}
 			}
 		],
