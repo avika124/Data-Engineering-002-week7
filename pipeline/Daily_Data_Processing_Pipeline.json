@@ -523,6 +523,204 @@
 					],
 					"scriptBlockExecutionTimeout": "02:00:00"
 				}
+			},
+			{
+				"name": "Filter_H_ECOM_ORDER_Files",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Get_CSV_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get_CSV_Files').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@startswith(item().name, 'H_ECOM_ORDER')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Process_H_ECOM_ORDER_Files",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter_H_ECOM_ORDER_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter_H_ECOM_ORDER_Files').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_H_ECOM_ORDER_Data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "order_id",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "order_id",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "customer_id",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "customer_id",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "product_name",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "product_name",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "quantity",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "quantity",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "unit_price",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "unit_price",
+												"type": "Decimal",
+												"physicalType": "decimal",
+												"scale": 2,
+												"precision": 10
+											}
+										},
+										{
+											"source": {
+												"name": "total_amount",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "total_amount",
+												"type": "Decimal",
+												"physicalType": "decimal",
+												"scale": 2,
+												"precision": 10
+											}
+										},
+										{
+											"source": {
+												"name": "order_status",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "order_status",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "payment_method",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "payment_method",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "H_ECOM_ORDER_CSV_Dataset",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "H_ECOM_ORDER_Table_Dataset",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
 			}
 		],
 		"annotations": [],
