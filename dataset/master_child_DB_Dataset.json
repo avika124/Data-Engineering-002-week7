@@ -1,0 +1,48 @@
+{
+	"name": "master_child_DB_Dataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SQLDatabaseConnection",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "parent_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "child_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "relationship_type",
+				"type": "nvarchar"
+			},
+			{
+				"name": "created_by",
+				"type": "nvarchar"
+			},
+			{
+				"name": "status",
+				"type": "nvarchar"
+			},
+			{
+				"name": "date",
+				"type": "date"
+			},
+			{
+				"name": "date_key",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "master_child"
+		}
+	}
+}

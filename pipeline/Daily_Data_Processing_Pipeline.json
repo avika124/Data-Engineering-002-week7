@@ -294,6 +294,235 @@
 					],
 					"scriptBlockExecutionTimeout": "02:00:00"
 				}
+			},
+			{
+				"name": "Filter_master_child_Files",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Truncate_master_child_Table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Get_CSV_Files').output.childItems",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@startswith(item().name, 'master_child_export')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Process_master_child_Files",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "Filter_master_child_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('Filter_master_child_Files').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_master_child_Data",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "extracted_date",
+											"value": {
+												"value": "@formatDateTime(concat(substring(item().name, 20, 4), '-', substring(item().name, 24, 2), '-', substring(item().name, 26, 2)), 'yyyy-MM-dd')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "extracted_date_key",
+											"value": {
+												"value": "@substring(item().name, 20, 8)",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzureSqlSink",
+									"writeBehavior": "insert",
+									"sqlWriterUseTableLock": false
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "parent_id",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "parent_id",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "child_id",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "child_id",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										},
+										{
+											"source": {
+												"name": "relationship_type",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "relationship_type",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "created_by",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "created_by",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "status",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "status",
+												"type": "String",
+												"physicalType": "nvarchar"
+											}
+										},
+										{
+											"source": {
+												"name": "extracted_date",
+												"type": "String"
+											},
+											"sink": {
+												"name": "date",
+												"type": "DateTime",
+												"physicalType": "date"
+											}
+										},
+										{
+											"source": {
+												"name": "extracted_date_key",
+												"type": "String"
+											},
+											"sink": {
+												"name": "date_key",
+												"type": "Int32",
+												"physicalType": "int"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "master_child_CSV_Dataset",
+									"type": "DatasetReference"
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "master_child_DB_Dataset",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "Truncate_master_child_Table",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Get_CSV_Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "SQLDatabaseConnection",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "NonQuery",
+							"text": "TRUNCATE TABLE master_child"
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
 			}
 		],
 		"annotations": [],
